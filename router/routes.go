@@ -6,14 +6,27 @@ import (
 )
 
 func NewRouter() http.Handler {
-   
 
-    userProxy := proxy.NewReverseProxy(
-        "http://localhost:8083",
-    )
+	orderProxy := proxy.NewReverseProxy(
+		"http://localhost:8082",
+	)
+	// Product and Order routes
+	http.Handle("/createorder", orderProxy)
 
-    http.Handle("/createproduct", userProxy)
-    http.Handle("/getproducts", userProxy)
+	payproxy := proxy.NewReverseProxy(
+		"https://088dptzh-4242.inc1.devtunnels.ms",
+	)
+	// Stripe routes
+	http.Handle("/api/create-checkout-session", payproxy)
+	http.Handle("/createstripesession", payproxy)
+	http.Handle("/success", payproxy)
+	http.Handle("/api/cancel", payproxy)
+	http.Handle("/webhook", payproxy)
 
-    return http.DefaultServeMux
+	productproxy := proxy.NewReverseProxy(
+		"http://localhost:8083",
+	)
+	http.Handle("/createproduct", productproxy)
+	http.Handle("/getproducts", productproxy)
+	return http.DefaultServeMux
 }
